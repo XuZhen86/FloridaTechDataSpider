@@ -127,9 +127,6 @@ if __name__ == '__main__':
         section['sessionId'] = bisectIndex(sessions, session)
 
         section['instructorId'] = bisectIndex(employees, instructor[1])
-        if section['instructorId'] == -1:
-            print(section)
-            exit()
 
         schedules = []
         for i in range(max([len(days), len(times), len(places)])):

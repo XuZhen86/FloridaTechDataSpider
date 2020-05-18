@@ -58,7 +58,7 @@ if __name__ == '__main__':
         name: str = section['instructor'][0]
         email: str = section['instructor'][1]
 
-        if bisectIndex(emails, email) == -1:
+        if name != '' and bisectIndex(emails, email) == -1:
             employees.append({
                 'name': name,
                 'title': None,

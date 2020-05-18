@@ -40,7 +40,6 @@ class Course:
         return f'{self.subject:>4}{self.course:04}{self.campusId:02}{self.semesterId}{self.year}'
 
 
-
 # https://docs.python.org/3/library/bisect.html#searching-sorted-lists
 def bisectIndex(ls: list, value) -> int:
     if value is None:
@@ -62,7 +61,7 @@ if __name__ == '__main__':
 
     courses: list = json.load(open('_pawsCourse.raw.json', 'r'))
 
-    for index, course in enumerate(courses):
+    for course in courses:
         course['levelId'] = bisectIndex(levels, course['level'])
 
         course['scheduleTypeIds'] = [
