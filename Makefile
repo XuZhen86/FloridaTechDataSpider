@@ -1,9 +1,8 @@
-all: timestamp.py building.min.json course3.min.json description.min.json note.min.json restriction.min.json session.min.json title.min.json campus.min.json courseAttribute.min.json employee.min.json prerequisite.min.json scheduleType.min.json subject.min.json department.min.json level.min.json requirement.min.json section.min.json tag.min.json
-	python3 timestamp.py
+all: metaData.py building.min.json course3.min.json description.min.json note.min.json restriction.min.json session.min.json title.min.json campus.min.json courseAttribute.min.json employee.min.json prerequisite.min.json scheduleType.min.json subject.min.json department.min.json level.min.json requirement.min.json section.min.json tag.min.json
+	python3 metaData.py
 	mkdir -p dist
 	rm -f dist/*
-	cp timestamp.json building.min.json course3.min.json description.min.json note.min.json restriction.min.json session.min.json title.min.json campus.min.json courseAttribute.min.json employee.min.json prerequisite.min.json scheduleType.min.json subject.min.json department.min.json level.min.json requirement.min.json section.min.json tag.min.json dist
-	mv dist/course3.min.json dist/course.min.json
+	cp metaData.min.json building.min.json course3.min.json description.min.json note.min.json restriction.min.json session.min.json title.min.json campus.min.json courseAttribute.min.json employee.min.json prerequisite.min.json scheduleType.min.json subject.min.json department.min.json level.min.json requirement.min.json section.min.json tag.min.json dist
 
 clean:
 	rm -f *.json
