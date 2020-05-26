@@ -27,19 +27,33 @@ fileNames = [
 
 if __name__ == '__main__':
     fileSizes = {}
+    totalSize = 0
     for fileName in fileNames:
         size = os.path.getsize(fileName)
         fileSizes[fileName] = size
+        totalSize += size
+
+    years = [0, 0, 0]
+    sections = json.load(open('section.json', 'r'))
+    for section in sections:
+        year: int = section['year']
+        semesterId: int = section['semesterId']
+
+        if years[semesterId] == 0:
+            years[semesterId] = year
+
+        if 0 not in years:
+            break
 
     timestamp = datetime.now().timestamp()
 
     json.dump(
-        {'fileSizes': fileSizes, 'timestamp': timestamp},
+        {'fileSizes': fileSizes, 'totalSize': totalSize, 'timestamp': timestamp, 'years': years},
         open('metaData.json', 'w'),
         indent=4
     )
     json.dump(
-        {'fileSizes': fileSizes, 'timestamp': timestamp},
+        {'fileSizes': fileSizes, 'totalSize': totalSize, 'timestamp': timestamp, 'years': years},
         open('metaData.min.json', 'w'),
         separators=(',', ':')
     )
