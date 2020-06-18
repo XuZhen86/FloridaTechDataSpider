@@ -34,7 +34,7 @@ _pawsSection.raw.json: FloridaTechDataSpider/spiders/pawsSection_spider.py _sect
 	scrapy crawl pawsSection -o _pawsSection.raw.json ${SCRAPY_OPTIONS}
 	python3 formatJson.py _pawsSection.raw.json
 
-_pawsBuilding.raw.json: FloridaTechDataSpider/spiders/pawsBuilding_spider.py course.json _section.raw.json formatJson.py
+_pawsBuilding.raw.json: FloridaTechDataSpider/spiders/pawsBuilding_spider.py course.json _pawsSection.raw.json formatJson.py
 	> _pawsBuilding.raw.json
 	scrapy crawl pawsBuilding -o _pawsBuilding.raw.json ${SCRAPY_OPTIONS}
 	python3 formatJson.py _pawsBuilding.raw.json
@@ -43,19 +43,19 @@ _pawsBuilding.raw.json: FloridaTechDataSpider/spiders/pawsBuilding_spider.py cou
 tag.json tag.min.json: tag.py
 	python3 tag.py
 
-campus.json campus.min.json: campus.py _section.raw.json
+campus.json campus.min.json: campus.py _pawsSection.raw.json
 	python3 campus.py
 
-note.json note.min.json: note.py _section.raw.json
+note.json note.min.json: note.py _pawsSection.raw.json
 	python3 note.py
 
-requirement.json requirement.min.json: requirement.py _section.raw.json
+requirement.json requirement.min.json: requirement.py _pawsSection.raw.json
 	python3 requirement.py
 
-session.json session.min.json: session.py _section.raw.json
+session.json session.min.json: session.py _pawsSection.raw.json
 	python3 session.py
 
-title.json title.min.json: title.py _section.raw.json
+title.json title.min.json: title.py _pawsSection.raw.json
 	python3 title.py
 
 building.json building.min.json: building.py _department.raw.json _employee.raw.json _pawsBuilding.raw.json
@@ -64,13 +64,13 @@ building.json building.min.json: building.py _department.raw.json _employee.raw.
 department.json department.min.json: department.py _department.raw.json building.json
 	python3 department.py
 
-description.json description.min.json: description.py _section.raw.json requirement.json tag.json
+description.json description.min.json: description.py _pawsSection.raw.json requirement.json tag.json
 	python3 description.py
 
-employee.json employee.min.json: employee.py _employee.raw.json building.json department.json _section.raw.json
+employee.json employee.min.json: employee.py _employee.raw.json building.json department.json _pawsSection.raw.json
 	python3 employee.py
 
-course.json course.min.json: course.py _section.raw.json campus.json description.json tag.json title.json
+course.json course.min.json: course.py _pawsSection.raw.json campus.json description.json tag.json title.json
 	python3 course.py
 
 

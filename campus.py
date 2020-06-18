@@ -1,7 +1,7 @@
 import json
 
 if __name__ == '__main__':
-    sections: list = json.load(open('_section.raw.json', 'r'))
+    sections: list = json.load(open('_pawsSection.raw.json', 'r'))
 
     campuses = set()
     for section in sections:

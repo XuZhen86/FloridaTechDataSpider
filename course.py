@@ -58,7 +58,7 @@ def bisectStartsWith(ls: list, value: str) -> int:
 if __name__ == '__main__':
     campuses: list = json.load(open('campus.json', 'r'))
     descriptions: list = json.load(open('description.json', 'r'))
-    sections: list = json.load(open('_section.raw.json', 'r'))
+    sections: list = json.load(open('_pawsSection.raw.json', 'r'))
     tags: list = json.load(open('tag.json', 'r'))
     titles: list = json.load(open('title.json', 'r'))
 

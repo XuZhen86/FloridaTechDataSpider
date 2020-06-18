@@ -2,7 +2,7 @@ import json
 import re
 
 if __name__ == '__main__':
-    sections: list = json.load(open('_section.raw.json', 'r'))
+    sections: list = json.load(open('_pawsSection.raw.json', 'r'))
 
     requirements = set()
     for section in sections:

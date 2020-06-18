@@ -34,7 +34,7 @@ if __name__ == '__main__':
     buildings = [b['code'] for b in json.load(open('building.json', 'r'))]
     departments = [d['code'] for d in json.load(open('department.json', 'r'))]
     titles: list = json.load(open('title.json', 'r'))
-    sections: list = json.load(open('_section.raw.json', 'r'))
+    sections: list = json.load(open('_pawsSection.raw.json', 'r'))
 
     employees: list = json.load(open('_employee.raw.json', 'r'))
 

@@ -8,7 +8,7 @@ class PawsBuildingSpider(scrapy.Spider):
 
     def start_requests(self):
         courses: list = json.load(open('course.json', 'r'))
-        sections: list = json.load(open('_section.raw.json', 'r'))
+        sections: list = json.load(open('_pawsSection.raw.json', 'r'))
 
         for course in courses:
             subject: str = course['subject']
