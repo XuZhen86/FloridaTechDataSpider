@@ -1,16 +1,25 @@
 import json
 import re
+from typing import List
+
+from util import listToJson
 
 if __name__ == '__main__':
-    sections: list = json.load(open('_pawsSection.raw.json', 'r'))
+    sections: List[dict] = json.load(open('_pawsSection.raw.json', 'r'))
 
     requirements = set()
     for section in sections:
         description: str = section['title'][1]
 
         try:
-            startIndex = re.search(r'\(Requirement[s]?: ', description).end()
+            # Search for header
+            startIndex = re.search(
+                r'\(Requirement[s]?: ', description
+            ).end()   # AttributeError
 
+            # We could simply search for ')'
+            # But there could be nesting prentices, so a nesting counter is required
+            # For example: 'Background knowledge in Fortran, C/C++ or other programming language (other than MATLAB or similar), and partial differential equations.'
             nestingLevel = 1
             for offset, char in enumerate(description[startIndex:]):
                 if char == '(':
@@ -23,11 +32,9 @@ if __name__ == '__main__':
                     break
 
             requirements.add(description[startIndex:endIndex])
-        except AttributeError:
+        except AttributeError:  # 'NoneType' object has no attribute 'end'
             pass
 
     requirements = list(requirements)
-    requirements.sort()
 
-    json.dump(requirements, open('requirement.json', 'w'), indent=4)
-    json.dump(requirements, open('requirement.min.json', 'w'), separators=(',', ':'))
+    listToJson(requirements, 'requirement')

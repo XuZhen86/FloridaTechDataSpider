@@ -1,8 +1,8 @@
+import bisect
 import json
 import re
-import bisect
 from dataclasses import asdict, astuple, dataclass, fields
-
+from util import dataclassToJson
 
 @dataclass
 class Department:
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     departments = json.load(open('_department.raw.json', 'r'))
     buildings = json.load(open('building.json', 'r'))
 
-    buildings = [b["code"] for b in buildings]
+    buildings = [b['code'] for b in buildings]
 
     for department in departments:
         buildingText: str = department['primaryLocation']
@@ -51,16 +51,5 @@ if __name__ == '__main__':
         Department(**{key: d[key] for key in keys})
         for d in departments
     ]
-    departments.sort()
-    values = [list(astuple(d)) for d in departments]
 
-    json.dump(
-        [asdict(d) for d in departments],
-        open('department.json', 'w'),
-        indent=4
-    )
-    json.dump(
-        {'keys': keys, 'values': values},
-        open('department.min.json', 'w'),
-        separators=(',', ':')
-    )
+    dataclassToJson(Department, departments, 'department')

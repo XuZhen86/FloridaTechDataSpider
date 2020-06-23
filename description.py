@@ -1,6 +1,8 @@
 import json
 import re
 
+from util import listToJson
+
 if __name__ == '__main__':
     sections: list = json.load(open('_pawsSection.raw.json', 'r'))
     requirements: list = json.load(open('requirement.json', 'r'))
@@ -47,7 +49,4 @@ if __name__ == '__main__':
 
         descriptions[index] = description.strip()
 
-    descriptions.sort()
-
-    json.dump(descriptions, open('description.json', 'w'), indent=4)
-    json.dump(descriptions, open('description.min.json', 'w'), separators=(',', ':'))
+    listToJson(descriptions, 'description')

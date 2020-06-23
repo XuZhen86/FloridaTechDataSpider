@@ -2,6 +2,8 @@ import bisect
 import json
 from dataclasses import asdict, astuple, dataclass, field, fields
 
+from util import dataclassToJson
+
 
 @dataclass
 class Course:
@@ -18,6 +20,7 @@ class Course:
     descriptionId: int = None
     tagIds: set = None
 
+    # Additional attributes
     lectureHours: int = None
     labHours: int = None
 
@@ -86,16 +89,5 @@ if __name__ == '__main__':
         Course(**{key: c[key] for key in keys})
         for c in courses
     ]
-    courses.sort()
-    values = [list(astuple(c)) for c in courses]
 
-    json.dump(
-        [asdict(c) for c in courses],
-        open('course2.json', 'w'),
-        indent=4
-    )
-    json.dump(
-        {'keys': keys, 'values': values},
-        open('course2.min.json', 'w'),
-        separators=(',', ':')
-    )
+    dataclassToJson(Course, courses, 'course2')

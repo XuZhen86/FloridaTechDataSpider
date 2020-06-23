@@ -1,4 +1,5 @@
 import json
+from util import listToJson
 
 if __name__ == '__main__':
     courses: list = json.load(open('_pawsCourse.raw.json', 'r'))
@@ -8,7 +9,5 @@ if __name__ == '__main__':
         courseAttributes.update(course['courseAttributes'])
 
     courseAttributes = list(courseAttributes)
-    courseAttributes.sort()
 
-    json.dump(courseAttributes, open('courseAttribute.json', 'w'), indent=4)
-    json.dump(courseAttributes, open('courseAttribute.min.json', 'w'), separators=(',', ':'))
+    listToJson(courseAttributes, 'courseAttribute')

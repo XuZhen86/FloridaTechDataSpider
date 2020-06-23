@@ -1,5 +1,7 @@
 import json
-from dataclasses import asdict, astuple, dataclass, fields
+from dataclasses import dataclass
+
+from util import dataclassToJson
 
 
 @dataclass
@@ -29,18 +31,4 @@ if __name__ == '__main__':
         for presetTag in presetTags
     ]
 
-    tags.sort()
-
-    keys = [f.name for f in fields(Tag)]
-    values = [list(astuple(t)) for t in tags]
-
-    json.dump(
-        [asdict(t) for t in tags],
-        open('tag.json', 'w'),
-        indent=4
-    )
-    json.dump(
-        {'keys': keys, 'values': values},
-        open('tag.min.json', 'w'),
-        separators=(',', ':')
-    )
+    dataclassToJson(Tag, tags, 'tag')

@@ -1,111 +1,127 @@
 import json
 import re
-
+from typing import List, Callable
 import scrapy
 
 
-lectureHoursPattern = re.compile(
+LECTURE_HOURS_RE = re.compile(
     pattern=r'([\d.]+)\s+Lecture hours',
     flags=re.IGNORECASE
 )
 
-
-def parseLectureHours(text: str, texts: list, course: dict) -> None:
-    text = text.strip()
-    try:
-        course['lectureHours'] = float(
-            lectureHoursPattern.search(text).group(1))
-    except AttributeError:  # 'NoneType' object has no attribute 'group'
-        pass
-
-
-labHoursPattern = re.compile(
+LAB_HOURS_RE = re.compile(
     pattern=r'([\d.]+)\s+Lab hours',
     flags=re.IGNORECASE
 )
 
 
-def parseLabHours(text: str, texts: list, course: dict) -> None:
-    text = text.strip()
+def parseLectureHours(line: str, lines: list, course: dict) -> None:
     try:
-        course['labHours'] = float(labHoursPattern.search(text).group(1))
+        lectureHours = LECTURE_HOURS_RE.search(line).group(1)
+        course['lectureHours'] = float(lectureHours)
     except AttributeError:  # 'NoneType' object has no attribute 'group'
         pass
 
 
-def parseLevels(text: str, texts: list, course: dict) -> None:
-    if text.strip() == 'Levels:':
-        course['level'] = texts.pop().strip()
+def parseLabHours(line: str, lines: list, course: dict) -> None:
+    try:
+        labHours = LAB_HOURS_RE.search(line).group(1)
+        course['labHours'] = float(labHours)
+    except AttributeError:  # 'NoneType' object has no attribute 'group'
+        pass
 
 
-def parseScheduleTypes(text: str, texts: list, course: dict) -> None:
-    if text.strip() != 'Schedule Types:':
+def parseLevels(line: str, lines: list, course: dict) -> None:
+    if line == 'Levels:':
+        course['level'] = lines.pop()
+
+
+def parseScheduleTypes(line: str, lines: list, course: dict) -> None:
+    if line != 'Schedule Types:':
         return
-        # course['scheduleType'] = texts.pop().strip()
 
     scheduleTypes = []
 
-    text: str = texts.pop()
-    while text.strip() != '':
-        parts = text.strip().split(',')
+    line: str = lines.pop()
+    while line != '':
+        parts = line.split(',')
         for part in parts:
             part = part.strip()
             if part != '':
                 scheduleTypes.append(part)
 
-        text: str = texts.pop()
+        line: str = lines.pop()
 
     course['scheduleTypes'] = scheduleTypes
 
 
-def parseRestrictions(text: str, texts: list, course: dict) -> None:
-    if text.strip() != 'Restrictions:':
+# UNINDENT_RESTRICTIONS = [
+#     'May not be assigned one of the following Student Attributes:',
+#     'May not be enrolled as the following Classifications:',
+#     'May not be enrolled in one of the following Campuses:',
+#     'May not be enrolled in one of the following Levels:',
+#     'May not be enrolled in one of the following Majors:',
+#     'Must be assigned one of the following Student Attributes:',
+#     'Must be enrolled in one of the following Campuses:',
+#     'Must be enrolled in one of the following Classifications:',
+#     'Must be enrolled in one of the following Colleges:',
+#     'Must be enrolled in one of the following Departments:',
+#     'Must be enrolled in one of the following Fields of Study (Major, Minor,  or Concentration):',
+#     'Must be enrolled in one of the following Majors:'
+# ]
+
+
+def parseRestrictions(line: str, lines: list, course: dict) -> None:
+    if line != 'Restrictions:':
         return
 
     restrictions = []
-    texts.pop()  # '\n'
+    lines.pop()  # '\n'
 
-    text: str = texts.pop()
-    while text.strip() != '':
-        if text.startswith('\n\xa0 \xa0 \xa0 '):
-            restrictions.append('\t' + text.strip())
+    while lines[-1] != '':
+        line = lines.pop()
+        restrictions.append(line)
+
+        # Some lines in restrictions are not indented
+        # See UNINDENT_RESTRICTIONS
+        if line.startswith('May not be') or line.startswith('Must be'):
+            restrictions.append(line)
+        # Others are indented with '\n\xa0 \xa0 \xa0 ', but it's stripped away
+        # Here we use a '\t' in place of the monstrosity
         else:
-            restrictions.append(text.strip())
-
-        text: str = texts.pop()
+            restrictions.append(f'\t{line}')
 
     course['restrictions'] = restrictions
 
 
-def parsePrerequisites(text: str, texts: list, course: dict) -> None:
-    if text.strip() != 'Prerequisites:':
+def parsePrerequisites(line: str, lines: list, course: dict) -> None:
+    if line != 'Prerequisites:':
         return
 
     prerequisite = ''
-    texts.pop()  # '\n'
+    lines.pop()  # '\n'
 
-    text: str = texts.pop()
-    while text.strip() != '':
-        prerequisite += f'{text.strip()} '
-        text: str = texts.pop()
+    while lines[-1] != '':
+        line = lines.pop()
+        prerequisite += f'{line} '
 
-    prerequisite = prerequisite.strip() # Remove trailing space
+    prerequisite = prerequisite.strip()  # Remove trailing space
     if prerequisite == '':
         prerequisite = None
 
     course['prerequisite'] = prerequisite
 
 
-def parseCourseAttributes(text: str, texts: list, course: dict) -> None:
-    if text.strip() != 'Course Attributes:':
+def parseCourseAttributes(line: str, lines: list, course: dict) -> None:
+    if line.strip() != 'Course Attributes:':
         return
 
     courseAttributes = []
 
-    text: str = texts.pop()
-    while text.strip() != '':
-        courseAttributes.append(text.strip())
-        text: str = texts.pop()
+    line: str = lines.pop()
+    while line.strip() != '':
+        courseAttributes.append(line.strip())
+        line: str = lines.pop()
 
     course['courseAttributes'] = courseAttributes
 
@@ -170,32 +186,47 @@ class PawsCourseSpider(scrapy.Spider):
     def parsePawsCourse(self, response: scrapy.http.TextResponse, course: dict) -> None:
         # print(response.url)
 
-        texts: list = response.xpath('''
+        # Get all lines of texts on the page
+        lines: List[str] = response.xpath('''
             //table[@class="datadisplaytable" and @summary="This table lists the course detail for the selected term."]
             //td[@class="ntdefault"]
             //text()
         ''').getall()
 
-        # print(texts)
-        texts.reverse()
+        # Strip all lines
+        lines = [
+            line.strip()
+            for line in lines
+        ]
 
+        # Using the 'Reverse & Pop' mechanism to process data
+        lines.reverse()
+
+        # Fill course with default data
         course.update({
             attribute['key']: attribute['default']
             for attribute in self.courseAttributes
         })
 
-        while texts != []:
-            text: str = texts.pop()
-            if text.strip() == '':
+        # Process lines
+        while lines != []:
+            line: str = lines.pop()
+
+            # Skip empty lines
+            if line == '':
                 continue
 
+            # Call parse functions on the line
             for attribute in self.courseAttributes:
                 key: str = attribute['key']
-                parseFn = attribute['parseFn']
+                parseFn: Callable[[str, List[str], dict], None] = attribute['parseFn']
                 default = attribute['default']
 
+                # If the value is still default, call parse function to update the course
+                # Parse function will change the course if the line is for the function
+                # Otherwise it does nothing
                 if course[key] == default:
-                    parseFn(text, texts, course)
+                    parseFn(line, lines, course)
 
         # print(course)
         yield course

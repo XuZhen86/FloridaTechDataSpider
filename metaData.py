@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-
+from typing import List
 
 fileNames = [
     'building.min.json',
@@ -26,34 +26,31 @@ fileNames = [
 
 
 if __name__ == '__main__':
+    # Collect file sizes
     fileSizes = {}
-    totalSize = 0
     for fileName in fileNames:
         size = os.path.getsize(fileName)
         fileSizes[fileName] = size
-        totalSize += size
 
-    years = [0, 0, 0]
-    sections = json.load(open('section.json', 'r'))
+    # Collect years from sections
+    years = [-1, -1, -1]
+    sections: List[dict] = json.load(open('section.json', 'r'))
     for section in sections:
         year: int = section['year']
         semesterId: int = section['semesterId']
 
-        if years[semesterId] == 0:
+        if years[semesterId] == -1:
             years[semesterId] = year
 
+        # Exit when all 3 years has been collected
         if 0 not in years:
             break
 
-    timestamp = datetime.now().timestamp()
+    metaData = {
+        'fileSizes': fileSizes,
+        'timestamp': datetime.now().timestamp(),
+        'years': years
+    }
 
-    json.dump(
-        {'fileSizes': fileSizes, 'totalSize': totalSize, 'timestamp': timestamp, 'years': years},
-        open('metaData.json', 'w'),
-        indent=4
-    )
-    json.dump(
-        {'fileSizes': fileSizes, 'totalSize': totalSize, 'timestamp': timestamp, 'years': years},
-        open('metaData.min.json', 'w'),
-        separators=(',', ':')
-    )
+    json.dump(metaData, open('metaData.json', 'w'), indent=4)
+    json.dump(metaData, open('metaData.min.json', 'w'), separators=(',', ':'))

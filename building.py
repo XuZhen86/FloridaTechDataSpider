@@ -2,6 +2,8 @@ import json
 import re
 from dataclasses import asdict, astuple, dataclass, fields
 
+from util import dataclassToJson
+from typing import List
 
 @dataclass(order=True)
 class Building:
@@ -38,18 +40,4 @@ if __name__ == '__main__':
         except AttributeError:
             pass
 
-    buildings.sort()
-
-    keys = [f.name for f in fields(Building)]
-    values = [list(astuple(b)) for b in buildings]
-
-    json.dump(
-        [asdict(b) for b in buildings],
-        open('building.json', 'w'),
-        indent=4
-    )
-    json.dump(
-        {'keys': keys, 'values': values},
-        open('building.min.json', 'w'),
-        separators=(',', ':')
-    )
+    dataclassToJson(Building, buildings, 'building')

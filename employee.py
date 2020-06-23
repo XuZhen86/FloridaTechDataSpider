@@ -1,7 +1,9 @@
+import bisect
 import json
 import re
-import bisect
 from dataclasses import asdict, astuple, dataclass, fields
+
+from util import dataclassToJson
 
 
 @dataclass
@@ -54,7 +56,11 @@ if __name__ == '__main__':
         emails.append(employee['email'])
 
     emails.sort()
+
     for section in sections:
+        if section['instructor'] is None:
+            continue
+
         name: str = section['instructor'][0]
         email: str = section['instructor'][1]
 
@@ -75,16 +81,19 @@ if __name__ == '__main__':
         Employee(**{key: e[key] for key in keys})
         for e in employees
     ]
-    employees.sort()
-    values = [list(astuple(e)) for e in employees]
 
-    json.dump(
-        [asdict(e) for e in employees],
-        open('employee.json', 'w'),
-        indent=4
-    )
-    json.dump(
-        {'keys': keys, 'values': values},
-        open('employee.min.json', 'w'),
-        separators=(',', ':')
-    )
+    dataclassToJson(Employee, employees, 'employee')
+
+    # employees.sort()
+    # values = [list(astuple(e)) for e in employees]
+
+    # json.dump(
+    #     [asdict(e) for e in employees],
+    #     open('employee.json', 'w'),
+    #     indent=4
+    # )
+    # json.dump(
+    #     {'keys': keys, 'values': values},
+    #     open('employee.min.json', 'w'),
+    #     separators=(',', ':')
+    # )

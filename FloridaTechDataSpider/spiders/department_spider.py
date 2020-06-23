@@ -30,7 +30,7 @@ class DepartmentSpider(scrapy.Spider):
         }
     ]
 
-    def parse(self, response: scrapy.http.TextResponse) -> None:
+    def parse(self, response: scrapy.http.TextResponse):
         departmentUrls = response.xpath('''
             //div[@class="twelve wide column"]
             /div[@class="ui list"]
@@ -41,9 +41,10 @@ class DepartmentSpider(scrapy.Spider):
 
         yield from response.follow_all(departmentUrls, callback=self.parseDepartment)
 
-    def parseDepartment(self, response: scrapy.http.TextResponse) -> None:
+    def parseDepartment(self, response: scrapy.http.TextResponse):
         # print(response.url)
 
+        # It's not guaranteed all fields are present on the page
         headers = response.xpath('''
             //div[@class="twelve wide column"]
             /table[@class="ui celled table" and position()=1]
@@ -59,12 +60,14 @@ class DepartmentSpider(scrapy.Spider):
         ''')
         # print(data)
 
+        name: str = response.xpath('''
+            //div[@class="twelve wide column"]
+            /h2
+            /text()
+        ''').get()
+
         department = {
-            'name': response.xpath('''
-                //div[@class="twelve wide column"]
-                /h2
-                /text()
-            ''').get(),
+            'name': name,
             'code': response.url[len('https://directory.fit.edu/department/'):]
         }
 
@@ -73,10 +76,12 @@ class DepartmentSpider(scrapy.Spider):
             xpath: str = attribute['xpath']
             key: str = attribute['key']
 
+            # If we don't see the header, set field to default value
             if header not in headers:
                 department[key] = None
                 continue
 
+            # Otherwise extract the string
             index = headers.index(header)
             value = tdTags[index].xpath(xpath).get()
             department[key] = value

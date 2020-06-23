@@ -2,6 +2,8 @@ import bisect
 import json
 import re
 from dataclasses import asdict, astuple, dataclass, field, fields
+from typing import Optional
+from util import dataclassToJson
 
 
 @dataclass
@@ -99,7 +101,7 @@ if __name__ == '__main__':
         days: list = section['days']
         times: list = section['times']
         places: list = section['places']
-        instructor: list = section['instructor']
+        instructor: Optional[list] = section['instructor']
         cap: list = section['cap']
         syllabus: str = section['syllabus']
         level: str = section['level']
@@ -126,7 +128,10 @@ if __name__ == '__main__':
 
         section['sessionId'] = bisectIndex(sessions, session)
 
-        section['instructorId'] = bisectIndex(employees, instructor[1])
+        if instructor is None:
+            section['instructorId'] = -1
+        else:
+            section['instructorId'] = bisectIndex(employees, instructor[1])
 
         schedules = []
         for i in range(max([len(days), len(times), len(places)])):
@@ -159,15 +164,5 @@ if __name__ == '__main__':
         Section(**{key: s[key] for key in keys})
         for s in sections
     ]
-    values = [list(astuple(s)) for s in sections]
 
-    json.dump(
-        [asdict(s) for s in sections],
-        open('section.json', 'w'),
-        indent=4
-    )
-    json.dump(
-        {'keys': keys,'values': values},
-        open('section.min.json', 'w'),
-        separators=(',', ':')
-    )
+    dataclassToJson(Section, sections, 'section')

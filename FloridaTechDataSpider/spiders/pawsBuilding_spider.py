@@ -1,4 +1,6 @@
 import json
+from typing import Dict, List, Optional
+
 import scrapy
 
 
@@ -29,9 +31,7 @@ class PawsBuildingSpider(scrapy.Spider):
                 }
             )
 
-            # break
-
-    def parseBuilding(self, response: scrapy.http.TextResponse, sections: list, course: dict) -> None:
+    def parseBuilding(self, response: scrapy.http.TextResponse, sections: List[dict], course: dict):
         # print(response.url)
 
         tableData = response.xpath('''
@@ -40,6 +40,8 @@ class PawsBuildingSpider(scrapy.Spider):
             /table[@class="datadisplaytable" and @summary="This table lists the scheduled meeting times and assigned instructors for this class.."]
         ''')
         # print(tableData)
+
+        # Using the reverse & pop method
         tableData.reverse()
 
         titles = response.xpath('''
@@ -50,6 +52,12 @@ class PawsBuildingSpider(scrapy.Spider):
         ''').getall()
         # print(titles)
 
+        # Some titles have '-' in them, so it's only possible to count backwards to get crn
+        # For example:
+        # 'Spc Topics in Chem Engr 1 - TOPIC: Biomaterials - 26537 - CHE 4591 - 01'
+        # 'Flight 4 CP-AMEL - 26920 - AVF 2102 - 29
+        # 'Flt Instructor-Airplane - 53802 - AVF 3001 - 05'
+        # 'Human Fact in Man-Mach Systems - 80507 - AHF 5101 - 01'
         crns = [
             int(title.split('-')[-3].strip())
             for title in titles
@@ -68,20 +76,25 @@ class PawsBuildingSpider(scrapy.Spider):
                 /text()
             ''').getall()
 
+            # Find places of the section
+            # The order showed on the page may be different from the order in the data file
             places = None
             for section in sections:
                 if section['crn'] == crn:
                     places: list = section['places']
+                    break
 
+            # Skip if there is no places
             if places is None:
                 continue
 
+            # Enumerate place and location to find matches
             for place in places:
                 buildingCode: str = place[0]
-                room: str = place[1]
+                room: Optional[str] = place[1]
 
-                if room == 'TBA':
-                    room = ''
+                if room is None:
+                    continue
 
                 yielded = False
                 for location in locations:

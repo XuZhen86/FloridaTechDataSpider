@@ -1,43 +1,41 @@
-all: metaData.py building.min.json course3.min.json description.min.json note.min.json restriction.min.json session.min.json title.min.json campus.min.json courseAttribute.min.json employee.min.json prerequisite.min.json scheduleType.min.json subject.min.json department.min.json level.min.json requirement.min.json section.min.json tag.min.json
-	python3 metaData.py
+makeWithLog:
 	mkdir -p dist
 	rm -f dist/*
-	cp metaData.min.json building.min.json course3.min.json description.min.json note.min.json restriction.min.json session.min.json title.min.json campus.min.json courseAttribute.min.json employee.min.json prerequisite.min.json scheduleType.min.json subject.min.json department.min.json level.min.json requirement.min.json section.min.json tag.min.json dist
+	time make all | tee dist/make.log
+
+
+all: building.min.json campus.min.json course3.min.json courseAttribute.min.json department.min.json description.min.json employee.min.json level.min.json metaData.py note.min.json prerequisite.min.json requirement.min.json restriction.min.json scheduleType.min.json section.min.json session.min.json subject.min.json tag.min.json title.min.json
+	python3 metaData.py
+	cp building.min.json campus.min.json course3.min.json courseAttribute.min.json department.min.json description.min.json employee.min.json level.min.json metaData.min.json note.min.json prerequisite.min.json requirement.min.json restriction.min.json scheduleType.min.json section.min.json session.min.json subject.min.json tag.min.json title.min.json dist
 
 clean:
 	rm -f *.json
 
 SCRAPY_OPTIONS=-s LOG_LEVEL=WARNING -s CLOSESPIDER_ERRORCOUNT=1
 
-_department.raw.json: FloridaTechDataSpider/spiders/department_spider.py formatJson.py
+_department.raw.json: FloridaTechDataSpider/spiders/department_spider.py
 	> _department.raw.json
 	scrapy crawl department -o _department.raw.json ${SCRAPY_OPTIONS}
-	python3 formatJson.py _department.raw.json
 
-_employee.raw.json: FloridaTechDataSpider/spiders/employee_spider.py formatJson.py
+_employee.raw.json: FloridaTechDataSpider/spiders/employee_spider.py
 	> _employee.raw.json
 	scrapy crawl employee -o _employee.raw.json ${SCRAPY_OPTIONS}
-	python3 formatJson.py _employee.raw.json
 
-_section.raw.json: FloridaTechDataSpider/spiders/section_spider.py formatJson.py
+_section.raw.json: FloridaTechDataSpider/spiders/section_spider.py
 	> _section.raw.json
 	scrapy crawl section -o _section.raw.json ${SCRAPY_OPTIONS}
-	python3 formatJson.py _section.raw.json
 
-_pawsCourse.raw.json: FloridaTechDataSpider/spiders/pawsCourse_spider.py course.json formatJson.py
+_pawsCourse.raw.json: FloridaTechDataSpider/spiders/pawsCourse_spider.py course.json
 	> _pawsCourse.raw.json
 	scrapy crawl pawsCourse -o _pawsCourse.raw.json ${SCRAPY_OPTIONS}
-	python3 formatJson.py _pawsCourse.raw.json
 
-_pawsSection.raw.json: FloridaTechDataSpider/spiders/pawsSection_spider.py _section.raw.json formatJson.py
+_pawsSection.raw.json: FloridaTechDataSpider/spiders/pawsSection_spider.py _section.raw.json
 	> _pawsSection.raw.json
 	scrapy crawl pawsSection -o _pawsSection.raw.json ${SCRAPY_OPTIONS}
-	python3 formatJson.py _pawsSection.raw.json
 
-_pawsBuilding.raw.json: FloridaTechDataSpider/spiders/pawsBuilding_spider.py course.json _pawsSection.raw.json formatJson.py
+_pawsBuilding.raw.json: FloridaTechDataSpider/spiders/pawsBuilding_spider.py course.json _pawsSection.raw.json
 	> _pawsBuilding.raw.json
 	scrapy crawl pawsBuilding -o _pawsBuilding.raw.json ${SCRAPY_OPTIONS}
-	python3 formatJson.py _pawsBuilding.raw.json
 
 
 tag.json tag.min.json: tag.py

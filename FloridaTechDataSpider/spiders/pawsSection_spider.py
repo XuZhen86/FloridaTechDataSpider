@@ -1,92 +1,113 @@
 import json
 import re
+from typing import Callable, List, Tuple
 
 import scrapy
 
 
-def parseLevels(text: str, texts: list, section: dict) -> None:
-    if text.strip() == 'Levels:':
-        section['level'] = texts.pop().strip()
+def parseLevels(lines: List[str], section: dict) -> None:
+    section['level'] = lines.pop()
 
 
-def parseWaitListSeats(text: str, texts: list, section: dict) -> None:
-    if text.strip() != 'Registration Availability':
-        return
+def parseWaitListSeats(lines: List[str], section: dict) -> None:
+    while lines[-1] != 'Waitlist Seats':
+        lines.pop()
 
-    while texts[-1].strip() != 'Waitlist Seats':
-        texts.pop()
+    seats: [int, int] = []
+    lines.pop()
+    lines.pop()
 
-    seats = []
-    texts.pop()
-    texts.pop()
+    seats.append(int(lines.pop()))
+    lines.pop()
 
-    seats.append(int(texts.pop()))
-    texts.pop()
-
-    seats.append(int(texts.pop()))
-    texts.pop()
+    seats.append(int(lines.pop()))
+    lines.pop()
 
     section['waitListSeats'] = seats
 
 
-def parseCrossListCoruses(text: str, texts: list, section: dict) -> None:
-    if text.strip() != 'Cross List Courses:':
-        return
+def parseCrossListCoruses(lines: List[str], section: dict) -> None:
+    courses: List[Tuple[str, int]] = []
+    lines.pop()
+    lines.pop()
 
-    courses = []
-    texts.pop()
-    texts.pop()
+    while lines[-1] != '':
+        text = lines.pop()
 
-    while texts[-1].strip() != '':
-        text: str = texts.pop()
-
-        course = text.split(' ')
-        course[1] = int(course[1])
-
+        course = (text.split(' ')[0], int(text.split(' ')[1]))
         courses.append(course)
-        texts.pop()
-        texts.pop()
+
+        lines.pop()
+        lines.pop()
 
     section['crossListCourses'] = courses
 
 
-def parseRestrictions(text: str, texts: list, section: dict) -> None:
-    if text.strip() != 'Restrictions:':
-        return
+# UNINDENT_RESTRICTIONS = [
+#     'May not be assigned one of the following Student Attributes:',
+#     'May not be enrolled as the following Classifications:',
+#     'May not be enrolled in one of the following Campuses:',
+#     'May not be enrolled in one of the following Levels:',
+#     'May not be enrolled in one of the following Majors:',
+#     'Must be assigned one of the following Student Attributes:',
+#     'Must be enrolled in one of the following Campuses:',
+#     'Must be enrolled in one of the following Classifications:',
+#     'Must be enrolled in one of the following Colleges:',
+#     'Must be enrolled in one of the following Departments:',
+#     'Must be enrolled in one of the following Fields of Study (Major, Minor,  or Concentration):',
+#     'Must be enrolled in one of the following Majors:'
+# ]
 
+
+def parseRestrictions(lines: List[str], section: dict) -> None:
     restrictions = []
-    texts.pop()  # '\n'
+    lines.pop()  # '\n'
 
-    text: str = texts.pop()
-    while text.strip() != '':
-        if text.startswith('\n\xa0 \xa0 \xa0 '):
-            restrictions.append('\t' + text.strip())
+    while lines[-1] != '':
+        line = lines.pop()
+
+        # Some lines in restrictions are not indented
+        # See UNINDENT_RESTRICTIONS
+        if line.startswith('May not be') or line.startswith('Must be'):
+            restrictions.append(line)
+        # Others are indented with '\n\xa0 \xa0 \xa0 ', but it's stripped away
+        # Here we use a '\t' in place of the monstrosity
         else:
-            restrictions.append(text.strip())
-
-        text: str = texts.pop()
+            restrictions.append(f'\t{line}')
 
     section['restrictions'] = restrictions
 
 
-def parsePrerequisites(text: str, texts: list, section: dict) -> None:
-    if text.strip() != 'Prerequisites:':
-        return
-
+def parsePrerequisites(lines: List[str], section: dict) -> None:
     prerequisite = ''
-    texts.pop()  # '\n'
+    lines.pop()  # '\n'
 
-    text: str = texts.pop()
-    while text.strip() != '':
-        prerequisite += f'{text.strip()} '
-        text: str = texts.pop()
+    while lines[-1] != '':
+        line = lines.pop()
+        prerequisite += f'{line} '
 
-    prerequisite = prerequisite.strip() # Remove trailing space
+    prerequisite = prerequisite.strip()  # Remove trailing space
     if prerequisite == '':
         prerequisite = None
 
     section['prerequisite'] = prerequisite
 
+
+def parseCorequisites(lines: List[str], section: dict) -> None:
+    corequisites: List[Tuple[str, int]] = []
+    lines.pop()
+    lines.pop()
+
+    while lines[-1] != '':
+        line = lines.pop()
+
+        course = (line.split()[0], int(line.split()[1]))
+        corequisites.append(course)
+
+        lines.pop()
+        lines.pop()
+
+    section['corequisites'] = corequisites
 
 
 class PawsSectionSpider(scrapy.Spider):
@@ -97,56 +118,52 @@ class PawsSectionSpider(scrapy.Spider):
         {
             'key': 'level',
             'parseFn': parseLevels,
-            'default': None
+            'default': None,
+            'header': 'Levels:'
         }, {
             'key': 'waitListSeats',
             'parseFn': parseWaitListSeats,
-            'default': []
+            'default': [],
+            'header': 'Registration Availability'
         }, {
             'key': 'crossListCourses',
             'parseFn': parseCrossListCoruses,
-            'default': []
+            'default': [],
+            'header': 'Cross List Courses:'
         }, {
             'key': 'restrictions',
             'parseFn': parseRestrictions,
-            'default': []
+            'default': [],
+            'header': 'Restrictions:'
         }, {
             'key': 'prerequisite',
             'parseFn': parsePrerequisites,
-            'default': None
+            'default': None,
+            'header': 'Prerequisites:'
+        }, {
+            'key': 'corequisites',
+            'parseFn': parseCorequisites,
+            'default': [],
+            'header': 'Corequisites:'
         }
     ]
 
     def start_requests(self):
-        # yield scrapy.Request(
-        #     'https://nssb-p.adm.fit.edu/prod/bwckschd.p_disp_detail_sched?term_in=202001&crn_in=19836',
-        #     callback=self.parsePawsSection,
-        #     cb_kwargs={
-        #         'section': dict()
-        #     }
-        # )
-
-        # yield scrapy.Request(
-        #     'https://nssb-p.adm.fit.edu/prod/bwckschd.p_disp_detail_sched?term_in=202001&crn_in=25783',
-        #     callback=self.parsePawsSection,
-        #     cb_kwargs={
-        #         'section': dict()
-        #     }
-        # )
-
-        term = ['', 'spring', '', '', '', 'summer', '', '', 'fall']
+        # Convertion from semester text to code
+        term = {'spring': '01', 'summer': '05', 'fall': '08'}
 
         sections: list = json.load(open('_section.raw.json', 'r'))
-        # for section in sections[0:100]:
         for section in sections:
             year: int = section['year']
             semester: str = section['semester']
             crn: int = section['crn']
 
-            termIn: str = f'{year}{"{:02}".format(term.index(semester))}'
+            # Construct URL
+            termIn = f'{year}{term[semester]}'
             pawsUrl = f'https://nssb-p.adm.fit.edu/prod/bwckschd.p_disp_detail_sched?term_in={termIn}&crn_in={crn}'
             # print(pawsUrl)
 
+            # Goto each section's PAWS page to collect data
             yield scrapy.Request(
                 pawsUrl,
                 callback=self.parsePawsSection,
@@ -158,34 +175,44 @@ class PawsSectionSpider(scrapy.Spider):
     def parsePawsSection(self, response: scrapy.http.Response, section: dict) -> None:
         # print(response.url)
 
-        texts: list = response.xpath('''
+        # Get all lines of texts on the page
+        lines: List[str] = response.xpath('''
             //table[@class="datadisplaytable" and @summary="This table is used to present the detailed class information."]
             //td[@class="dddefault"]
             //text()
         ''').getall()
 
-        # for text in texts:
-        #     print(f'[{text}]')
+        # Strip all lines
+        lines = [
+            line.strip()
+            for line in lines
+        ]
 
-        texts.reverse()
+        # Using the 'Reverse & Pop' mechanism to process data
+        lines.reverse()
 
+        # Fill section with default data
         section.update({
             attribute['key']: attribute['default']
             for attribute in self.sectionAttributes
         })
 
-        while texts != []:
-            text: str = texts.pop()
-            if text.strip() == '':
+        # Process lines
+        while lines != []:
+            line: str = lines.pop()
+
+            # Skip empty lines
+            if line == '':
                 continue
 
+            # Try to match the line with one of the attrs
             for attribute in self.sectionAttributes:
-                key: str = attribute['key']
-                parseFn = attribute['parseFn']
-                default = attribute['default']
+                parseFn: Callable[[List[str], dict], None] = attribute['parseFn']
+                header: str = attribute['header']
 
-                if section[key] == default:
-                    parseFn(text, texts, section)
+                # Process attr if header matches
+                if line == header:
+                    parseFn(lines, section)
 
         # print(section)
         yield section

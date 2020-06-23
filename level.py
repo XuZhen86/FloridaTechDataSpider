@@ -1,5 +1,7 @@
 import json
 
+from util import listToJson
+
 if __name__ == '__main__':
     courses: list = json.load(open('_pawsCourse.raw.json', 'r'))
 
@@ -10,7 +12,5 @@ if __name__ == '__main__':
             levels.add(level)
 
     levels = list(levels)
-    levels.sort()
 
-    json.dump(levels, open('level.json', 'w'), indent=4)
-    json.dump(levels, open('level.min.json', 'w'), separators=(',', ':'))
+    listToJson(levels, 'level')

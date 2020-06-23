@@ -1,14 +1,15 @@
 import json
+from typing import List
+
+from util import listToJson
 
 if __name__ == '__main__':
-    sections: list = json.load(open('_pawsSection.raw.json', 'r'))
+    sections: List[dict] = json.load(open('_pawsSection.raw.json', 'r'))
 
     campuses = set()
     for section in sections:
         campuses.add(section['location'])
 
     campuses = list(campuses)
-    campuses.sort()
 
-    json.dump(campuses, open('campus.json', 'w'), indent=4)
-    json.dump(campuses, open('campus.min.json', 'w'), separators=(',', ':'))
+    listToJson(campuses, 'campus')

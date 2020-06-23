@@ -3,6 +3,8 @@ import json
 import re
 from dataclasses import asdict, astuple, dataclass, field, fields
 
+from util import dataclassToJson
+
 
 @dataclass
 class Course:
@@ -78,6 +80,7 @@ if __name__ == '__main__':
     # (CC|CL|COM|HON|HU|LA|Q|SS)
     tagCodePattern = re.compile(tagCodePattern, flags=re.IGNORECASE)
 
+    # Use dict to ensure courses are unique
     courses = dict()
     for index, section in enumerate(sections):
         course: int = section['course'][1]
@@ -127,17 +130,4 @@ if __name__ == '__main__':
     for course in courses:
         course.tagIds = list(course.tagIds)
 
-    keys = [f.name for f in fields(Course)]
-    courses.sort()
-    values = [list(astuple(c)) for c in courses]
-
-    json.dump(
-        [asdict(c) for c in courses],
-        open('course.json', 'w'),
-        indent=4
-    )
-    json.dump(
-        {'keys': keys, 'values': values},
-        open('course.min.json', 'w'),
-        separators=(',', ':')
-    )
+    dataclassToJson(Course, courses, 'course')

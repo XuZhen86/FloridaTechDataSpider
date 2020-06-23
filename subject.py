@@ -1,5 +1,8 @@
 import json
 from dataclasses import asdict, astuple, dataclass, fields
+from typing import List
+
+from util import dataclassToJson
 
 presetSubjects = [
     ['ASC', 'Academic Support Center'],
@@ -72,7 +75,7 @@ class Subject:
 
 
 if __name__ == '__main__':
-    courses: list = json.load(open('course2.json', 'r'))
+    courses: List[dict] = json.load(open('course2.json', 'r'))
 
     subjects = dict()
     for presetSubject in presetSubjects:
@@ -84,10 +87,12 @@ if __name__ == '__main__':
     for index, course in enumerate(courses):
         subject: str = course['subject']
 
+        # Add course to subject if the subject exists
         if subject in subjects:
             subjects[subject]['courseIds'].append(index)
             continue
 
+        # Otherwise create a new subject
         subjects[subject] = {
             'name': subject,
             'courseIds': [index]
@@ -97,9 +102,12 @@ if __name__ == '__main__':
     for code, subject in subjects.items():
         subject['code'] = code
 
-        courseIds: list = subject['courseIds']
+        courseIds: List[int] = subject['courseIds']
         courseIds.sort()
-        expectedCourseIds = list(range(courseIds[0], courseIds[-1] + 1))
+
+        # Coruse IDs are expected to be consecutive, so we can extract the range of it
+        expectedCourseIds: List[int] = list(range(courseIds[0], courseIds[-1] + 1))
+
         if courseIds == expectedCourseIds:
             subject['courseIdStart'] = courseIds[0]
             subject['courseIdEnd'] = courseIds[-1] + 1
@@ -107,6 +115,7 @@ if __name__ == '__main__':
             raise ValueError(f'Course IDs for subject {code} is not consecutive. Expected {expectedCourseIds}, got {courseIds}.')
 
         subjects2.append(subject)
+
     subjects = subjects2
     # print(subjects)
 
@@ -115,16 +124,5 @@ if __name__ == '__main__':
         Subject(**{key: s[key] for key in keys})
         for s in subjects
     ]
-    subjects.sort()
-    values = [list(astuple(s)) for s in subjects]
 
-    json.dump(
-        [asdict(s) for s in subjects],
-        open('subject.json', 'w'),
-        indent=4
-    )
-    json.dump(
-        {'keys': keys, 'values': values},
-        open('subject.min.json', 'w'),
-        separators=(',', ':')
-    )
+    dataclassToJson(Subject, subjects, 'subject')

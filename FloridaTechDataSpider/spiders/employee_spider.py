@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 import scrapy
 
 
@@ -28,7 +30,8 @@ class EmployeeSpider(scrapy.Spider):
         }
     ]
 
-    def parse(self, response: scrapy.http.TextResponse) -> None:
+    # Goto each department page
+    def parse(self, response: scrapy.http.TextResponse):
         departmentUrls = response.xpath('''
             //div[@class="twelve wide column"]
             /div[@class="ui list"]
@@ -39,8 +42,11 @@ class EmployeeSpider(scrapy.Spider):
 
         yield from response.follow_all(departmentUrls, callback=self.parseDepartment)
 
-    def parseDepartment(self, response: scrapy.http.TextResponse) -> None:
-        departmentCode = response.url[len('https://directory.fit.edu/department/'):]
+    # Parse employee info on department page
+    def parseDepartment(self, response: scrapy.http.TextResponse):
+        departmentCode = response.url[
+            len('https://directory.fit.edu/department/'):
+        ]
 
         employeeRows = response.xpath('''
             //div[@class="twelve wide column"]
@@ -57,10 +63,11 @@ class EmployeeSpider(scrapy.Spider):
                 key: str = attribute['key']
                 xpath: str = attribute['xpath']
 
-                value: str = employeeRow.xpath(xpath).get()
+                value: Optional[str] = employeeRow.xpath(xpath).get()
                 employee[key] = value
 
-            room: str = employee['room']
+            # If room starts with 'Room: ', trim it
+            room: Optional[str] = employee['room']
             if room is not None and room.startswith('Room: '):
                 employee['room'] = room[len('Room: '):]
 

@@ -1,5 +1,7 @@
 import json
 
+from util import listToJson
+
 if __name__ == '__main__':
     courses: list = json.load(open('_pawsCourse.raw.json', 'r'))
 
@@ -8,7 +10,5 @@ if __name__ == '__main__':
         scheduleTypes.update(course['scheduleTypes'])
 
     scheduleTypes = list(scheduleTypes)
-    scheduleTypes.sort()
 
-    json.dump(scheduleTypes, open('scheduleType.json', 'w'), indent=4)
-    json.dump(scheduleTypes, open('scheduleType.min.json', 'w'), separators=(',', ':'))
+    listToJson(scheduleTypes, 'scheduleType')

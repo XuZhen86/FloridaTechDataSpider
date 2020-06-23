@@ -2,6 +2,8 @@ import bisect
 import json
 from dataclasses import asdict, astuple, dataclass, field, fields
 
+from util import dataclassToJson
+
 
 @dataclass
 class Course:
@@ -26,6 +28,9 @@ class Course:
     restrictionIds: list = None
     prerequisiteId: int = None
     courseAttributeIds: list = None
+
+    def __lt__(self, c):
+        return str(self) < str(c)
 
 
 # https://docs.python.org/3/library/bisect.html#searching-sorted-lists
@@ -59,15 +64,5 @@ if __name__ == '__main__':
         Course(**{key: c[key] for key in keys})
         for c in courses
     ]
-    values = [list(astuple(c)) for c in courses]
 
-    json.dump(
-        [asdict(c) for c in courses],
-        open('course3.json', 'w'),
-        indent=4
-    )
-    json.dump(
-        {'keys': keys, 'values': values},
-        open('course3.min.json', 'w'),
-        separators=(',', ':')
-    )
+    dataclassToJson(Course, courses, 'course3')
