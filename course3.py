@@ -29,9 +29,6 @@ class Course:
     prerequisiteId: int = None
     courseAttributeIds: list = None
 
-    def __lt__(self, c):
-        return str(self) < str(c)
-
 
 # https://docs.python.org/3/library/bisect.html#searching-sorted-lists
 def bisectIndex(ls: list, value) -> int:
@@ -65,4 +62,4 @@ if __name__ == '__main__':
         for c in courses
     ]
 
-    dataclassToJson(Course, courses, 'course3')
+    dataclassToJson(Course, courses, 'course3', sort=False)

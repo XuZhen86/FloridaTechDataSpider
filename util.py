@@ -4,9 +4,9 @@ from typing import Any, List
 
 
 # Dump list of dataclasses to full version and minimized version of JSON files
-def dataclassToJson(objectClass: dataclass, objects: List[dataclass], filePrefix: str) -> None:
+def dataclassToJson(objectClass: dataclass, objects: List[dataclass], filePrefix: str, sort = True) -> None:
     try:
-        objects.sort()
+        sort and objects.sort()
     except TypeError:  # '<' not supported between instances of 'objectClass' and 'objectClass'
         print(f'Warning: {objectClass.__name__} is not sorted.')
 
