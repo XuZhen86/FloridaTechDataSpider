@@ -1,7 +1,7 @@
 makeWithLog:
 	mkdir -p dist
 	rm -f dist/*
-	time make all | tee dist/make.log
+	(time make all) 2>&1 | tee dist/make.log
 
 
 all: building.min.json campus.min.json course3.min.json courseAttribute.min.json department.min.json description.min.json employee.min.json level.min.json metaData.py note.min.json prerequisite.min.json requirement.min.json restriction.min.json scheduleType.min.json section.min.json session.min.json subject.min.json tag.min.json title.min.json
