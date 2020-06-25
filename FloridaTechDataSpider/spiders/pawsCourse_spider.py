@@ -80,7 +80,6 @@ def parseRestrictions(line: str, lines: list, course: dict) -> None:
 
     while lines[-1] != '':
         line = lines.pop()
-        restrictions.append(line)
 
         # Some lines in restrictions are not indented
         # See UNINDENT_RESTRICTIONS
