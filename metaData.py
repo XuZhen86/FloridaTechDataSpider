@@ -43,7 +43,7 @@ if __name__ == '__main__':
             years[semesterId] = year
 
         # Exit when all 3 years has been collected
-        if 0 not in years:
+        if -1 not in years:
             break
 
     metaData = {
