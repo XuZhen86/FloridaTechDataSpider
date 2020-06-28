@@ -1,3 +1,5 @@
+SHELL=/bin/bash
+
 makeWithLog:
 	mkdir -p dist
 	rm -f dist/*
