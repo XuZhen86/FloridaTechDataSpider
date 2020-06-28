@@ -1,8 +1,6 @@
 SHELL=/bin/bash
 
 makeWithLog:
-	mkdir -p dist
-	rm -f dist/*
 	(time make all) 2>&1 | tee dist/make.log
 
 
